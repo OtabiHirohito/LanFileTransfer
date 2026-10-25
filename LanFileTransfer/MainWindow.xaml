@@ -1,0 +1,492 @@
+<Window x:Class="LanFileTransfer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="LAN File Transfer" Height="880" Width="800"
+        MinHeight="520" MinWidth="720"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        FontFamily="Segoe UI"
+        FontSize="13"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        Background="{StaticResource WindowBackgroundBrush}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="52"
+                            ResizeBorderThickness="6"
+                            GlassFrameThickness="0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== タイトルバー ===== -->
+        <Border Grid.Row="0" Background="{StaticResource TitleBarBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal"
+                            Margin="18,0,0,0" VerticalAlignment="Center">
+                    <Border Width="32" Height="32" CornerRadius="10" Background="#33FFFFFF">
+                        <TextBlock Text="⇅" FontSize="17" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="LAN File Transfer" Foreground="White"
+                                   FontSize="14" FontWeight="SemiBold"/>
+                        <TextBlock Text="かんたんLANファイル転送" Foreground="#CCE0E7FF"
+                                   FontSize="11" Margin="0,1,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="MinimizeButton" Style="{StaticResource TitleBarButtonStyle}"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                            Content="&#xE921;" Click="MinimizeButton_Click" ToolTip="最小化"/>
+                    <Button x:Name="CloseButton" Style="{StaticResource CloseButtonStyle}"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                            Content="&#xE8BB;" Click="CloseButton_Click" ToolTip="閉じる"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ===== 本文 ===== -->
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="18,16,18,18">
+            <Grid MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 上段: 自機情報 / 動作モード -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 自機情報 -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,9,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="4" Height="14" CornerRadius="2"
+                                        Background="{StaticResource AccentBrush}" Margin="0,0,8,0"/>
+                                <TextBlock Text="自機情報" Style="{StaticResource CardTitleStyle}"/>
+                            </StackPanel>
+                            <Button x:Name="RefreshInfoButton" Content="更新"
+                                    HorizontalAlignment="Right"
+                                    Style="{StaticResource GhostButtonStyle}"
+                                    Click="RefreshInfoButton_Click"/>
+                        </Grid>
+
+                        <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="コンピュータ名" Style="{StaticResource FieldLabelStyle}"/>
+                                <TextBlock x:Name="HostNameText" Grid.Column="1"
+                                           Text="-" Style="{StaticResource ValueTextStyle}"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="IPv4アドレス" Style="{StaticResource FieldLabelStyle}"
+                                           VerticalAlignment="Top"/>
+                                <TextBlock x:Name="IpListText" Grid.Column="1" Text="-"
+                                           Style="{StaticResource ValueTextStyle}"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 動作モード -->
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="9,0,0,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="4" Height="14" CornerRadius="2"
+                                    Background="{StaticResource AccentBrush}" Margin="0,0,8,0"/>
+                            <TextBlock Text="動作モード" Style="{StaticResource CardTitleStyle}"/>
+                        </StackPanel>
+
+                        <Border Background="{StaticResource AccentSoftBrush}"
+                                CornerRadius="12" Padding="4" Margin="0,12,0,0">
+                            <StackPanel>
+                                <RadioButton x:Name="SendModeRadio" Content="送信側になる"
+                                             GroupName="Mode" IsChecked="True"
+                                             Style="{StaticResource SegmentRadioButtonStyle}"
+                                             Margin="0,0,0,3"
+                                             Checked="ModeRadio_Checked"/>
+                                <RadioButton x:Name="ReceiveModeRadio" Content="受信側になる"
+                                             GroupName="Mode"
+                                             Style="{StaticResource SegmentRadioButtonStyle}"
+                                             Margin="0,3,0,3"
+                                             Checked="ModeRadio_Checked"/>
+                                <RadioButton x:Name="BrowserModeRadio" Content="ブラウザに共有する"
+                                             GroupName="Mode"
+                                             Style="{StaticResource SegmentRadioButtonStyle}"
+                                             Margin="0,3,0,0"
+                                             Checked="ModeRadio_Checked"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- 設定 -->
+            <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,14,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 送信/受信設定 -->
+                    <Grid Grid.Column="0">
+                    <!-- 送信パネル -->
+                    <StackPanel x:Name="SendPanel">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="4" Height="14" CornerRadius="2"
+                                    Background="{StaticResource AccentBrush}" Margin="0,0,8,0"/>
+                            <TextBlock Text="送信設定" Style="{StaticResource CardTitleStyle}"/>
+                        </StackPanel>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="相手のIPアドレス" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="TargetIpTextBox" Grid.Column="1" Text="192.168.1.2"
+                                     Width="240" HorizontalAlignment="Left"
+                                     Style="{StaticResource ModernTextBoxStyle}"/>
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="ポート番号" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="SendPortTextBox" Grid.Column="1" Text="5000"
+                                     Width="120" HorizontalAlignment="Left"
+                                     Style="{StaticResource ModernTextBoxStyle}"/>
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="送信ファイル" Style="{StaticResource FieldLabelStyle}"/>
+                            <DockPanel Grid.Column="1" LastChildFill="True">
+                                <Button x:Name="SelectFileButton" Content="ファイルを選択..."
+                                        DockPanel.Dock="Left"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="SelectFileButton_Click"/>
+                                <TextBlock x:Name="SelectedFileText" Text="(未選択)"
+                                           Style="{StaticResource MutedTextStyle}"
+                                           Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Grid>
+
+                        <Button x:Name="SendButton" Content="送信開始"
+                                HorizontalAlignment="Left" Margin="0,18,0,0"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Click="SendButton_Click"/>
+                    </StackPanel>
+
+                    <!-- 受信パネル -->
+                    <StackPanel x:Name="ReceivePanel" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="4" Height="14" CornerRadius="2"
+                                    Background="{StaticResource AccentBrush}" Margin="0,0,8,0"/>
+                            <TextBlock Text="受信設定" Style="{StaticResource CardTitleStyle}"/>
+                        </StackPanel>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="待受アドレス" Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox x:Name="ListenAddressComboBox" Grid.Column="1"
+                                      Width="240" HorizontalAlignment="Left"
+                                      DisplayMemberPath="Display"
+                                      Style="{StaticResource ModernComboBoxStyle}"/>
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="待受ポート番号" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="ReceivePortTextBox" Grid.Column="1" Text="5000"
+                                     Width="120" HorizontalAlignment="Left"
+                                     Style="{StaticResource ModernTextBoxStyle}"/>
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="保存先フォルダ" Style="{StaticResource FieldLabelStyle}"/>
+                            <DockPanel Grid.Column="1" LastChildFill="True">
+                                <Button x:Name="SelectFolderButton" Content="フォルダを選択..."
+                                        DockPanel.Dock="Left"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="SelectFolderButton_Click"/>
+                                <TextBlock x:Name="SaveFolderText" Text="(未選択)"
+                                           Style="{StaticResource MutedTextStyle}"
+                                           Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Grid>
+
+                        <Button x:Name="ReceiveToggleButton" Content="受信待機を開始"
+                                HorizontalAlignment="Left" Margin="0,18,0,0"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Click="ReceiveToggleButton_Click"/>
+                    </StackPanel>
+
+                    <!-- ブラウザ共有パネル -->
+                    <StackPanel x:Name="SharePanel" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="4" Height="14" CornerRadius="2"
+                                    Background="{StaticResource AccentBrush}" Margin="0,0,8,0"/>
+                            <TextBlock Text="ブラウザ共有設定" Style="{StaticResource CardTitleStyle}"/>
+                        </StackPanel>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="共有アドレス" Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox x:Name="ShareAddressComboBox" Grid.Column="1"
+                                      Width="240" HorizontalAlignment="Left"
+                                      DisplayMemberPath="Display"
+                                      Style="{StaticResource ModernComboBoxStyle}"/>
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="接続元IPの制限" Style="{StaticResource FieldLabelStyle}"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBox x:Name="ShareAllowedClientsTextBox"
+                                         Width="240" HorizontalAlignment="Left"
+                                         Style="{StaticResource ModernTextBoxStyle}"
+                                         ToolTip="例: 192.168.1.20, 192.168.1.0/24&#x0a;空欄ならすべてのアドレスを許可します。"/>
+                                <TextBlock Text="空欄ならすべて許可。カンマ区切りで IP / CIDR を指定"
+                                           Style="{StaticResource MutedTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="共有ポート番号" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="SharePortTextBox" Grid.Column="1" Text="5000"
+                                     Width="120" HorizontalAlignment="Left"
+                                     Style="{StaticResource ModernTextBoxStyle}"/>
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="共有ファイル" Style="{StaticResource FieldLabelStyle}"/>
+                            <DockPanel Grid.Column="1" LastChildFill="True">
+                                <Button x:Name="SelectShareFileButton" Content="ファイルを選択..."
+                                        DockPanel.Dock="Left"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="SelectShareFileButton_Click"/>
+                                <TextBlock x:Name="ShareFileText" Text="(未選択)"
+                                           Style="{StaticResource MutedTextStyle}"
+                                           Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Grid>
+
+                        <Button x:Name="ShareToggleButton" Content="共有を開始"
+                                HorizontalAlignment="Left" Margin="0,18,0,0"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Click="ShareToggleButton_Click"/>
+
+                        <!-- 共有中だけ表示する共有URLと残り時間 -->
+                        <Border x:Name="ShareUrlPanel" Visibility="Collapsed"
+                                Background="{StaticResource AccentSoftBrush}"
+                                CornerRadius="10" Padding="14,12" Margin="0,14,0,0">
+                            <StackPanel>
+                                <TextBlock x:Name="ShareUrlHeadingText"
+                                           Text="受信側はブラウザで次のURLを開いてください（60秒で自動停止）"
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                                <DockPanel Margin="0,8,0,0" LastChildFill="True">
+                                    <Button x:Name="CopyShareUrlButton" Content="コピー"
+                                            DockPanel.Dock="Right" VerticalAlignment="Stretch"
+                                            Style="{StaticResource GhostButtonStyle}"
+                                            Click="CopyShareUrlButton_Click"/>
+                                    <TextBox x:Name="ShareUrlTextBox" IsReadOnly="True"
+                                             TextWrapping="Wrap" Margin="0,0,10,0"
+                                             Style="{StaticResource ModernTextBoxStyle}"/>
+                                </DockPanel>
+                                <TextBlock x:Name="ShareUrlHintText"
+                                           Text="通信は HTTPS で暗号化されます。ブラウザに証明書の警告が出るので「詳細設定」から続行してください。"
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                <TextBlock x:Name="ShareCountdownText" Text="残り 60 秒で自動停止します。"
+                                           Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    </Grid>
+
+                    <!-- セキュリティ(送信設定の右側) -->
+                    <Border x:Name="SecurityPanel" Grid.Column="1" Margin="20,0,0,0" Padding="20,0,0,0"
+                            BorderBrush="{StaticResource DividerBrush}" BorderThickness="1,0,0,0">
+                        <StackPanel Width="220" VerticalAlignment="Top">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="4" Height="14" CornerRadius="2"
+                                        Background="{StaticResource AccentBrush}" Margin="0,0,8,0"/>
+                                <TextBlock Text="セキュリティ" Style="{StaticResource CardTitleStyle}"/>
+                            </StackPanel>
+
+                            <!-- アプリ同士: 合言葉で暗号化 -->
+                            <StackPanel x:Name="PasswordSecurityPanel">
+                                <CheckBox x:Name="UsePasswordCheckBox" Content="合言葉で暗号化する"
+                                          Style="{StaticResource ModernCheckBoxStyle}"
+                                          Margin="0,12,0,0"/>
+
+                                <PasswordBox x:Name="PasswordInput" Margin="0,10,0,0"
+                                             Style="{StaticResource ModernPasswordBoxStyle}"/>
+
+                                <TextBlock Text="送信側と受信側で同じ合言葉を入力してください。"
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                            </StackPanel>
+
+                            <!-- ブラウザ共有: 公開のしかた -->
+                            <StackPanel x:Name="BrowserShareSecurityPanel" Visibility="Collapsed">
+                                <TextBlock Text="自動停止までの時間" Style="{StaticResource FieldLabelStyle}"
+                                           Margin="0,12,0,0"/>
+                                <DockPanel Margin="0,6,0,0" LastChildFill="True">
+                                    <TextBlock Text="秒" DockPanel.Dock="Right" VerticalAlignment="Center"
+                                               Margin="8,0,0,0" Style="{StaticResource MutedTextStyle}"/>
+                                    <TextBox x:Name="ShareLifetimeTextBox" Text="60"
+                                             Style="{StaticResource ModernTextBoxStyle}"/>
+                                </DockPanel>
+                                <TextBlock Text="10〜86400 秒 (既定 60 秒)"
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+
+                                <CheckBox x:Name="UseShareTokenCheckBox" Content="URLにトークンを含める"
+                                          IsChecked="True"
+                                          Style="{StaticResource ModernCheckBoxStyle}"
+                                          Margin="0,12,0,0"
+                                          Checked="ShareSecurityOption_Changed"
+                                          Unchecked="ShareSecurityOption_Changed"/>
+
+                                <CheckBox x:Name="UseShareHttpsCheckBox" Content="HTTPS で暗号化する"
+                                          IsChecked="True"
+                                          Style="{StaticResource ModernCheckBoxStyle}"
+                                          Margin="0,8,0,0"
+                                          Checked="ShareSecurityOption_Changed"
+                                          Unchecked="ShareSecurityOption_Changed"/>
+
+                                <TextBlock x:Name="ShareSecurityNoteText"
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- 転送状況 -->
+            <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,14,0,0">
+                <StackPanel>
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="4" Height="14" CornerRadius="2"
+                                    Background="{StaticResource AccentBrush}" Margin="0,0,8,0"/>
+                            <TextBlock Text="転送状況" Style="{StaticResource CardTitleStyle}"/>
+                        </StackPanel>
+                        <Border x:Name="StatusBadge" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                CornerRadius="10" Padding="10,4"
+                                Background="{StaticResource StatusIdleBgBrush}">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse x:Name="StatusDot" Width="8" Height="8"
+                                         Fill="{StaticResource StatusIdleDotBrush}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="StatusText" Text="待機中" Margin="6,0,0,0"
+                                           FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{StaticResource StatusIdleTextBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <ProgressBar x:Name="TransferProgressBar" Margin="0,14,0,0"
+                                 Minimum="0" Maximum="100" Value="0"
+                                 Style="{StaticResource ModernProgressBarStyle}"/>
+                    <TextBlock x:Name="ProgressLabel" Text="待機中..."
+                               Margin="0,10,0,0" Style="{StaticResource MutedTextStyle}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- ログ -->
+            <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,14,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Width="4" Height="14" CornerRadius="2"
+                                    Background="{StaticResource AccentBrush}" Margin="0,0,8,0"/>
+                            <TextBlock Text="ログ" Style="{StaticResource CardTitleStyle}"/>
+                        </StackPanel>
+                        <Button x:Name="ClearLogButton" Content="クリア"
+                                HorizontalAlignment="Right"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Click="ClearLogButton_Click"/>
+                    </Grid>
+
+                    <TextBox x:Name="LogTextBox" Grid.Row="1" Margin="0,12,0,0"
+                             IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             Style="{StaticResource ConsoleTextBoxStyle}"/>
+                </Grid>
+            </Border>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Window>
