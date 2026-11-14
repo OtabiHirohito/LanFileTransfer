@@ -37,9 +37,8 @@ namespace LanFileTransfer
 
             if (dialog.ShowDialog() == true)
             {
-                _shareFilePaths.Clear();
-                _shareFilePaths.AddRange(dialog.FileNames);
-                UpdateFileSelectionDisplay(ShareFileText, _shareFilePaths);
+                // 送信側と共有するファイルは共通
+                SetSelectedFiles(dialog.FileNames);
             }
         }
 
@@ -53,7 +52,7 @@ namespace LanFileTransfer
                 return;
             }
 
-            if (_shareFilePaths.Count == 0)
+            if (_selectedFilePaths.Count == 0)
             {
                 MessageBox.Show("共有するファイルを選択してください。", "確認", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -98,7 +97,7 @@ namespace LanFileTransfer
                 BrowserShareServer server = BrowserShareServer.Start(
                     listenAddress,
                     port,
-                    _shareFilePaths,
+                    _selectedFilePaths,
                     TimeSpan.FromSeconds(lifetimeSeconds),
                     useToken,
                     useHttps,

@@ -10,7 +10,10 @@
         FontFamily="Segoe UI"
         FontSize="13"
         Foreground="{StaticResource TextPrimaryBrush}"
-        Background="{StaticResource WindowBackgroundBrush}">
+        Background="{StaticResource WindowBackgroundBrush}"
+        AllowDrop="True"
+        DragOver="Window_DragOver"
+        Drop="Window_Drop">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="52"

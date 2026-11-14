@@ -6,6 +6,9 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Button = System.Windows.Controls.Button;
 using Brush = System.Windows.Media.Brush;
+using DataFormats = System.Windows.DataFormats;
+using DragDropEffects = System.Windows.DragDropEffects;
+using DragEventArgs = System.Windows.DragEventArgs;
 using MessageBox = System.Windows.MessageBox;
 
 namespace LanFileTransfer
@@ -18,7 +21,6 @@ namespace LanFileTransfer
     {
         private readonly AppSettings _settings = AppSettings.Load();
         private readonly List<string> _selectedFilePaths = new();
-        private readonly List<string> _shareFilePaths = new();
         private readonly StatusBadgePresenter _statusBadge;
 
         private string? _saveFolderPath;
@@ -28,6 +30,15 @@ namespace LanFileTransfer
         private bool _isReceiving;
 
         public MainWindow()
+            : this(Array.Empty<string>())
+        {
+        }
+
+        /// <param name="startupFiles">
+        /// .exe にドロップして起動したときのファイルパス(コマンドライン引数)。
+        /// 指定されたファイルは送信対象としてセットする。
+        /// </param>
+        public MainWindow(IReadOnlyList<string> startupFiles)
         {
             InitializeComponent();
 
@@ -37,6 +48,7 @@ namespace LanFileTransfer
 
             ApplySettings();
             LoadLocalInfo();
+            SetStartupFiles(startupFiles);
         }
 
         // ===== タイトルバー / ログ =====
@@ -101,6 +113,88 @@ namespace LanFileTransfer
         {
             LogTextBox.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
             LogTextBox.ScrollToEnd();
+        }
+
+        /// <summary>
+        /// 選択したファイルを送信側・ブラウザ共有側の両方に反映する。
+        /// 「送信側になる」と「ブラウザに共有する」は同じファイルを対象にする。
+        /// </summary>
+        private void SetSelectedFiles(IEnumerable<string> paths)
+        {
+            _selectedFilePaths.Clear();
+            _selectedFilePaths.AddRange(paths);
+            RefreshSelectedFilesDisplay();
+        }
+
+        /// <summary>送信側・ブラウザ共有側のファイル表示を現在の選択内容で更新する。</summary>
+        private void RefreshSelectedFilesDisplay()
+        {
+            UpdateFileSelectionDisplay(SelectedFileText, _selectedFilePaths);
+            UpdateFileSelectionDisplay(ShareFileText, _selectedFilePaths);
+        }
+
+        // ===== ドラッグ＆ドロップ =====
+
+        /// <summary>
+        /// ファイルを追加できる状態か。送信/受信/共有の動作中や、
+        /// ファイルを使わない受信モードでは受け付けない。
+        /// </summary>
+        private bool CanAcceptFileDrop
+            => !_isSending && !_isReceiving && !_isSharing
+               && (SendModeRadio.IsChecked == true || BrowserModeRadio.IsChecked == true);
+
+        /// <summary>ドラッグ中のデータから、存在するファイルのパスだけを取り出す。</summary>
+        private static bool TryGetDroppedFiles(DragEventArgs e, out string[] files)
+        {
+            files = Array.Empty<string>();
+
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop) ||
+                e.Data.GetData(DataFormats.FileDrop) is not string[] dropped)
+            {
+                return false;
+            }
+
+            files = dropped.Where(File.Exists).ToArray();
+            return files.Length > 0;
+        }
+
+        private void Window_DragOver(object sender, DragEventArgs e)
+        {
+            // 受け付けない場合はカーソルを「不可」にする
+            e.Effects = CanAcceptFileDrop && TryGetDroppedFiles(e, out _)
+                ? DragDropEffects.Copy
+                : DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private void Window_Drop(object sender, DragEventArgs e)
+        {
+            e.Handled = true;
+
+            if (!CanAcceptFileDrop || !TryGetDroppedFiles(e, out string[] files))
+            {
+                return;
+            }
+
+            // すでに選択済みのファイルは重複して追加しない
+            var added = files
+                .Where(file => !_selectedFilePaths.Contains(file, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+
+            if (added.Count == 0)
+            {
+                AppendLog("ドロップされたファイルはすべて選択済みです。");
+                return;
+            }
+
+            _selectedFilePaths.AddRange(added);
+            RefreshSelectedFilesDisplay();
+
+            AppendLog($"{added.Count}件のファイルを追加しました。");
+            if (added.Count < files.Length)
+            {
+                AppendLog($"{files.Length - added.Count}件は選択済みのため追加していません。");
+            }
         }
 
         /// <summary>

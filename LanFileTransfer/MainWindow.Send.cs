@@ -8,6 +8,40 @@ namespace LanFileTransfer
     /// <summary>送信側の操作(ファイル選択・送信・停止)。</summary>
     public partial class MainWindow
     {
+        /// <summary>
+        /// .exe にファイルをドロップして起動したとき、そのファイルを送信対象にセットする。
+        /// モードも送信側に切り替える(送信開始はユーザー操作に任せる)。
+        /// </summary>
+        private void SetStartupFiles(IReadOnlyList<string> paths)
+        {
+            if (paths.Count == 0)
+            {
+                return;
+            }
+
+            var files = paths.Where(File.Exists).ToList();
+            int skippedCount = paths.Count - files.Count;
+
+            if (files.Count == 0)
+            {
+                AppendLog("起動時に指定されたファイルが見つかりませんでした。");
+                return;
+            }
+
+            // ドロップされたファイルは「送る」意図なので、送信側モードにする
+            SendModeRadio.IsChecked = true;
+
+            SetSelectedFiles(files);
+
+            AppendLog($"{files.Count}件のファイルを送信対象に設定しました。");
+            if (skippedCount > 0)
+            {
+                AppendLog($"{skippedCount}件はファイルが見つからないため除外しました。");
+            }
+
+            ProgressLabel.Text = "送信対象のファイルを設定しました。相手のIPアドレスを確認して送信開始を押してください。";
+        }
+
         private void SelectFileButton_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFileDialog
@@ -18,9 +52,7 @@ namespace LanFileTransfer
 
             if (dialog.ShowDialog() == true)
             {
-                _selectedFilePaths.Clear();
-                _selectedFilePaths.AddRange(dialog.FileNames);
-                UpdateFileSelectionDisplay(SelectedFileText, _selectedFilePaths);
+                SetSelectedFiles(dialog.FileNames);
             }
         }
 
